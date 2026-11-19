@@ -153,6 +153,28 @@ class StudentIndex final : public Index {
         h = h * 2654435769u;     // karıştır: bilgiyi üst bitlere yay
         return h ^ (h >> 16);    // üst bitleri alt bitlere indir
     }
+        static const char* text_of(const Node* node) {
+        return reinterpret_cast<const char*>(node + 1);
+    }
+
+    static bool matches(const Node* node, uint32_t h, string_view word) {
+        if (node->hash != h) return false;
+        if (node->length != word.size()) return false;
+        const char* text = text_of(node);
+        for (size_t k = 0; k < word.size(); ++k) {
+            if (text[k] != word[k]) return false;
+        }
+        return true;
+    }
+
+    size_t locate(string_view word, uint32_t h) const {
+        const size_t mask = capacity_ - 1;
+        size_t i = h & mask;
+        while (table_[i] != nullptr && !matches(table_[i], h, word)) {
+            i = (i + 1) & mask;
+        }
+        return i;
+    }
 public:
     StudentIndex() {
         // TASK 2: Set up an empty structure.
