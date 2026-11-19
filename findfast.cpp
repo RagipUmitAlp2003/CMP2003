@@ -136,7 +136,23 @@ using IndexPtr = unique_ptr<Index, IndexDeleter>;
 // BEGIN STUDENT IMPLEMENTATION
 namespace findfast {
 class StudentIndex final : public Index {
-    // TASK 1: Add fields and private helpers for your chosen structure.
+        // ===== TASK 1: alanlar ve yardimci fonksiyonlar =====
+    struct Node {            // her kelimenin bloğunun başı; karakterler hemen arkasında
+        uint32_t hash;       // kelimenin hash'i
+        ListId   list;       // kelimenin liste ID'si
+        uint32_t length;     // kelimenin uzunluğu
+    };
+
+    Node** table_;       // slot dizisi: her slot ya nullptr (boş) ya da bir Node*
+    size_t capacity_;    // slot sayısı (0 ya da 2'nin kuvveti)
+    size_t count_;       // saklanan farklı kelime sayısı
+
+    static uint32_t hash_of(string_view word) noexcept {
+        uint32_t h = 0;
+        for (char c : word) h = h * 31 + static_cast<unsigned char>(c);
+        h = h * 2654435769u;     // karıştır: bilgiyi üst bitlere yay
+        return h ^ (h >> 16);    // üst bitleri alt bitlere indir
+    }
 public:
     StudentIndex() {
         // TASK 2: Set up an empty structure.
