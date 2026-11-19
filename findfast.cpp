@@ -175,6 +175,34 @@ class StudentIndex final : public Index {
         }
         return i;
     }
+        void grow() {
+        size_t new_capacity = 16;
+        if (capacity_ != 0) new_capacity = capacity_ * 2;
+
+        Node** fresh = static_cast<Node**>(memory::allocate(new_capacity * sizeof(Node*)));
+        for (size_t i = 0; i < new_capacity; ++i) fresh[i] = nullptr;
+
+        const size_t mask = new_capacity - 1;
+        for (size_t i = 0; i < capacity_; ++i) {
+            Node* node = table_[i];
+            if (node == nullptr) continue;
+            size_t j = node->hash & mask;
+            while (fresh[j] != nullptr) j = (j + 1) & mask;
+            fresh[j] = node;
+        }
+
+        memory::deallocate(table_);
+        table_ = fresh;
+        capacity_ = new_capacity;
+    }
+
+    void release_all() noexcept {
+        for (size_t i = 0; i < capacity_; ++i) memory::deallocate(table_[i]);
+        memory::deallocate(table_);
+        table_ = nullptr;
+        capacity_ = 0;
+        count_ = 0;
+    }
 public:
     StudentIndex() {
         // TASK 2: Set up an empty structure.
